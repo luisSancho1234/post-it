@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+<title>Post-it</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: #fff176;
+    color: #2b2b2b;
+    font-family: "Segoe UI", -apple-system, "Helvetica Neue", Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+  }
+  #bar {
+    height: 30px;
+    flex: 0 0 30px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 4px;
+    background: rgba(0, 0, 0, 0.07);
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+  #bar .spacer { flex: 1; }
+  button {
+    -webkit-app-region: no-drag;
+    width: 24px; height: 24px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: #2b2b2b;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.65;
+  }
+  button:hover { background: rgba(0, 0, 0, 0.12); opacity: 1; }
+  button.on { opacity: 1; background: rgba(0, 0, 0, 0.15); }
+  #del:hover { background: #e57373; color: #fff; }
+  #text {
+    flex: 1;
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 15px;
+    line-height: 1.4;
+    padding: 10px 12px;
+  }
+  #palette {
+    display: none;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.07);
+    flex-wrap: wrap;
+  }
+  #palette.open { display: flex; }
+  .dot {
+    -webkit-app-region: no-drag;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    padding: 0;
+    opacity: 1;
+  }
+  .dot:hover { transform: scale(1.15); background-clip: padding-box; }
+</style>
+</head>
+<body>
+  <div id="bar">
+    <button id="new" title="Nova nota">+</button>
+    <button id="color" title="Cor">🎨</button>
+    <button id="smaller" title="Diminuir letra">A−</button>
+    <button id="bigger" title="Aumentar letra">A+</button>
+    <div class="spacer"></div>
+    <button id="pin" title="Fixar por cima das outras janelas">📌</button>
+    <button id="del" title="Apagar nota">✕</button>
+  </div>
+  <div id="palette"></div>
+  <textarea id="text" placeholder="Escreva aqui..." spellcheck="false"></textarea>
+
+<script>
+  const id = new URLSearchParams(location.search).get('id');
+  const $ = (s) => document.querySelector(s);
+  const text = $('#text');
+  let note = null;
+  let timer = null;
+
+  function applyColor(c) { document.body.style.background = c; }
+  function applyFont(n) { text.style.fontSize = n + 'px'; }
+
+  function flush() {
+    clearTimeout(timer);
+    window.postit.update(id, { text: text.value });
+  }
+
+  async function init() {
+    note = await window.postit.getNote(id);
+    if (!note) return;
+    text.value = note.text || '';
+    applyColor(note.color);
+    applyFont(note.fontSize || 15);
+    $('#pin').classList.toggle('on', !!note.pinned);
+
+    const colors = await window.postit.getColors();
+    const pal = $('#palette');
+    colors.forEach((c) => {
+      const d = document.createElement('button');
+      d.className = 'dot';
+      d.style.background = c;
+      d.title = c;
+      d.addEventListener('click', () => {
+        note.color = c;
+        applyColor(c);
+        window.postit.update(id, { color: c });
+        pal.classList.remove('open');
+      });
+      pal.appendChild(d);
+    });
+    text.focus();
+  }
+
+  text.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(flush, 300);
+  });
+  window.addEventListener('beforeunload', flush);
+  window.addEventListener('blur', flush);
+
+  $('#new').addEventListener('click', () => window.postit.newNote());
+  $('#color').addEventListener('click', () => $('#palette').classList.toggle('open'));
+  $('#smaller').addEventListener('click', () => {
+    note.fontSize = Math.max(10, (note.fontSize || 15) - 1);
+    applyFont(note.fontSize);
+    window.postit.update(id, { fontSize: note.fontSize });
+  });
+  $('#bigger').addEventListener('click', () => {
+    note.fontSize = Math.min(32, (note.fontSize || 15) + 1);
+    applyFont(note.fontSize);
+    window.postit.update(id, { fontSize: note.fontSize });
+  });
+  $('#pin').addEventListener('click', async () => {
+    const pinned = await window.postit.togglePin(id);
+    $('#pin').classList.toggle('on', pinned);
+  });
+  $('#del').addEventListener('click', () => {
+    if (text.value.trim() === '' || confirm('Apagar esta nota?')) {
+      window.postit.deleteNote(id);
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
