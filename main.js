@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const ICON = path.join(__dirname, 'icon.png');
+const COLLAPSED_H = 32;
 const COLORS = ['#fff176', '#f8bbd0', '#c5e1a5', '#81d4fa', '#ffcc80', '#ce93d8', '#e0e0e0'];
 
 let notes = [];
@@ -55,6 +56,7 @@ function createNote() {
     color: COLORS[notes.length % COLORS.length],
     fontSize: 15,
     pinned: false,
+    collapsed: false,
     x: wa.x + wa.width - 300 - offset,
     y: wa.y + 60 + offset,
     w: 260,
@@ -72,7 +74,8 @@ function openNote(note) {
     return;
   }
 
-  const bounds = { x: note.x, y: note.y, width: note.w, height: note.h };
+  const collapsed = !!note.collapsed;
+  const bounds = { x: note.x, y: note.y, width: note.w, height: collapsed ? COLLAPSED_H : note.h };
   const visible = isVisibleOnSomeDisplay(bounds);
 
   const win = new BrowserWindow({
@@ -80,9 +83,10 @@ function openNote(note) {
     width: bounds.width,
     height: bounds.height,
     minWidth: 180,
-    minHeight: 140,
+    minHeight: collapsed ? COLLAPSED_H : 140,
     frame: false,
-    resizable: true,
+    resizable: !collapsed,
+    maximizable: false,
     skipTaskbar: true,
     show: false,
     backgroundColor: note.color,
@@ -109,7 +113,8 @@ function openNote(note) {
       const n = notes.find((x) => x.id === note.id);
       if (!n) return;
       const b = win.getBounds();
-      n.x = b.x; n.y = b.y; n.w = b.width; n.h = b.height;
+      n.x = b.x; n.y = b.y; n.w = b.width;
+      if (!n.collapsed) n.h = b.height;
       scheduleSave();
     }, 250);
   };
@@ -152,6 +157,27 @@ ipcMain.handle('note:pin', (_e, id) => {
   w.setAlwaysOnTop(n.pinned, 'floating');
   scheduleSave();
   return n.pinned;
+});
+
+ipcMain.handle('note:collapse', (_e, id) => {
+  const n = notes.find((x) => x.id === id);
+  const w = windows.get(id);
+  if (!n || !w || w.isDestroyed()) return false;
+  const width = w.getBounds().width;
+  if (n.collapsed) {
+    n.collapsed = false;
+    w.setResizable(true);
+    w.setMinimumSize(180, 140);
+    w.setSize(width, n.h);
+  } else {
+    n.h = w.getBounds().height;
+    n.collapsed = true;
+    w.setMinimumSize(180, COLLAPSED_H);
+    w.setSize(width, COLLAPSED_H);
+    w.setResizable(false);
+  }
+  scheduleSave();
+  return n.collapsed;
 });
 
 ipcMain.on('note:new', () => createNote());

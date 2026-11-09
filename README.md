@@ -6,6 +6,7 @@ Notas adesivas para Windows e macOS, feitas com Electron.
 
 - Quantas notas quiser, cada uma em sua própria janela
 - 7 cores, tamanho de letra ajustável
+- Botão — minimiza a nota: sobra só o cabeçalho com o começo do texto e o botão ▢ para maximizar
 - Botão 📌 para manter a nota sempre por cima das outras janelas
 - Posição, tamanho, cor e texto salvos automaticamente
 - Ícone na bandeja do sistema (clique com o botão direito):

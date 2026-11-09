@@ -41,6 +41,20 @@
   }
   button:hover { background: rgba(0, 0, 0, 0.12); opacity: 1; }
   button.on { opacity: 1; background: rgba(0, 0, 0, 0.15); }
+  #preview {
+    display: none;
+    flex: 1;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: 0.85;
+  }
+  body.collapsed #preview { display: block; }
+  body.collapsed .tool, body.collapsed .spacer,
+  body.collapsed #palette, body.collapsed #text { display: none; }
   #del:hover { background: #e57373; color: #fff; }
   #text {
     flex: 1;
@@ -78,13 +92,15 @@
 </head>
 <body>
   <div id="bar">
-    <button id="new" title="Nova nota">+</button>
-    <button id="color" title="Cor">🎨</button>
-    <button id="smaller" title="Diminuir letra">A−</button>
-    <button id="bigger" title="Aumentar letra">A+</button>
+    <button id="new" class="tool" title="Nova nota">+</button>
+    <button id="color" class="tool" title="Cor">🎨</button>
+    <button id="smaller" class="tool" title="Diminuir letra">A−</button>
+    <button id="bigger" class="tool" title="Aumentar letra">A+</button>
     <div class="spacer"></div>
+    <div id="preview"></div>
+    <button id="collapse" title="Minimizar">—</button>
     <button id="pin" title="Fixar por cima das outras janelas">📌</button>
-    <button id="del" title="Apagar nota">✕</button>
+    <button id="del" class="tool" title="Apagar nota">✕</button>
   </div>
   <div id="palette"></div>
   <textarea id="text" placeholder="Escreva aqui..." spellcheck="false"></textarea>
@@ -99,6 +115,19 @@
   function applyColor(c) { document.body.style.background = c; }
   function applyFont(n) { text.style.fontSize = n + 'px'; }
 
+  function updatePreview() {
+    const first = text.value.split('\n').map((l) => l.trim()).find((l) => l) || '';
+    $('#preview').textContent = first || 'Nota vazia';
+  }
+
+  function applyCollapsed(c) {
+    document.body.classList.toggle('collapsed', c);
+    const b = $('#collapse');
+    b.textContent = c ? '▢' : '—';
+    b.title = c ? 'Maximizar' : 'Minimizar';
+    if (c) updatePreview(); else text.focus();
+  }
+
   function flush() {
     clearTimeout(timer);
     window.postit.update(id, { text: text.value });
@@ -111,6 +140,8 @@
     applyColor(note.color);
     applyFont(note.fontSize || 15);
     $('#pin').classList.toggle('on', !!note.pinned);
+    updatePreview();
+    applyCollapsed(!!note.collapsed);
 
     const colors = await window.postit.getColors();
     const pal = $('#palette');
@@ -127,10 +158,11 @@
       });
       pal.appendChild(d);
     });
-    text.focus();
+    if (!note.collapsed) text.focus();
   }
 
   text.addEventListener('input', () => {
+    updatePreview();
     clearTimeout(timer);
     timer = setTimeout(flush, 300);
   });
@@ -148,6 +180,10 @@
     note.fontSize = Math.min(32, (note.fontSize || 15) + 1);
     applyFont(note.fontSize);
     window.postit.update(id, { fontSize: note.fontSize });
+  });
+  $('#collapse').addEventListener('click', async () => {
+    flush();
+    applyCollapsed(await window.postit.toggleCollapse(id));
   });
   $('#pin').addEventListener('click', async () => {
     const pinned = await window.postit.togglePin(id);
