@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 const ICON = path.join(__dirname, 'icon.png');
-const COLLAPSED_H = 32;
+const COLLAPSED_H = 76;
 const COLORS = ['#fff176', '#f8bbd0', '#c5e1a5', '#81d4fa', '#ffcc80', '#ce93d8', '#e0e0e0'];
 
 let notes = [];

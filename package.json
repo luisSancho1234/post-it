@@ -31,6 +31,19 @@
       "createStartMenuShortcut": true,
       "runAfterFinish": true
     },
+    "dmg": {
+      "background": "dmg-background.png",
+      "window": {
+        "width": 660,
+        "height": 420
+      },
+      "iconSize": 96,
+      "iconTextSize": 12,
+      "contents": [
+        { "x": 165, "y": 220 },
+        { "x": 495, "y": 220, "type": "link", "path": "/Applications" }
+      ]
+    },
     "mac": {
       "target": "dmg",
       "icon": "icon.png",

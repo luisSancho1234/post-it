@@ -83,12 +83,16 @@
   button:hover { background: rgba(255, 255, 255, 0.5); opacity: 1; transform: translateY(-1px); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.56), 0 4px 10px rgba(25, 34, 48, 0.1); }
   button:active { transform: scale(0.92); }
   button.on { opacity: 1; background: rgba(255, 255, 255, 0.62); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.68), 0 3px 9px rgba(25, 34, 48, 0.12); }
+  button svg { display: block; width: 16px; height: 16px; margin: auto; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .type-icon { font: 600 12px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; letter-spacing: -0.6px; }
   #preview {
     display: none;
     flex: 1;
     min-width: 0;
-    padding: 0 6px;
+    align-self: center;
+    padding: 0 7px;
     font-size: 13px;
+    line-height: 29px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -144,15 +148,15 @@
 <body>
   <div class="note-shell">
     <div id="bar">
-      <button id="new" class="tool" title="Nova nota" aria-label="Nova nota">+</button>
-      <button id="color" class="tool" title="Cor" aria-label="Escolher cor">◌</button>
-      <button id="smaller" class="tool" title="Diminuir letra" aria-label="Diminuir letra">A−</button>
-      <button id="bigger" class="tool" title="Aumentar letra" aria-label="Aumentar letra">A+</button>
+      <button id="new" class="tool" title="Nova nota" aria-label="Nova nota"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+      <button id="color" class="tool" title="Cor" aria-label="Escolher cor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18h1.2a2 2 0 0 0 0-4H12a2 2 0 0 1 0-4h2.5A6.5 6.5 0 0 0 12 3Z"/><circle cx="7.5" cy="10" r=".8" fill="currentColor" stroke="none"/><circle cx="10" cy="6.8" r=".8" fill="currentColor" stroke="none"/><circle cx="14" cy="6.8" r=".8" fill="currentColor" stroke="none"/></svg></button>
+      <button id="smaller" class="tool" title="Diminuir letra" aria-label="Diminuir letra"><span class="type-icon">A−</span></button>
+      <button id="bigger" class="tool" title="Aumentar letra" aria-label="Aumentar letra"><span class="type-icon">A＋</span></button>
       <div class="spacer"></div>
       <div id="preview"></div>
-    <button id="collapse" title="Minimizar">—</button>
-    <button id="pin" title="Fixar por cima das outras janelas" aria-label="Fixar por cima">⌖</button>
-      <button id="del" class="tool" title="Apagar nota" aria-label="Apagar nota">×</button>
+      <button id="collapse" title="Recolher nota" aria-label="Recolher nota"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      <button id="pin" title="Fixar por cima das outras janelas" aria-label="Fixar por cima"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 4 5 5-3 1-4 4-1 5-2-2 1-5 4-4 1-3Z"/><path d="m9 15-4 4M7 12l5 5"/></svg></button>
+      <button id="del" class="tool" title="Apagar nota" aria-label="Apagar nota"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M10 4h4l1 3H9l1-3ZM8 10v7M12 10v7M16 10v7M6 7l1 13h10l1-13"/></svg></button>
     </div>
     <div id="palette"></div>
     <textarea id="text" placeholder="Escreva aqui..." spellcheck="false"></textarea>
@@ -178,8 +182,11 @@
   function applyCollapsed(c) {
     document.body.classList.toggle('collapsed', c);
     const b = $('#collapse');
-    b.textContent = c ? '▢' : '—';
-    b.title = c ? 'Maximizar' : 'Minimizar';
+    b.innerHTML = c
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+    b.title = c ? 'Expandir nota' : 'Recolher nota';
+    b.setAttribute('aria-label', b.title);
     if (c) updatePreview(); else text.focus();
   }
 
