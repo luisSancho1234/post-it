@@ -89,7 +89,9 @@ function openNote(note) {
     maximizable: false,
     skipTaskbar: true,
     show: false,
-    backgroundColor: note.color,
+    backgroundColor: '#00000000',
+    transparent: true,
+    hasShadow: false,
     alwaysOnTop: !!note.pinned,
     icon: ICON,
     webPreferences: {
@@ -143,7 +145,7 @@ ipcMain.on('note:update', (_e, id, patch) => {
   if (typeof patch.color === 'string' && COLORS.includes(patch.color)) {
     n.color = patch.color;
     const w = windows.get(id);
-    if (w && !w.isDestroyed()) w.setBackgroundColor(n.color);
+    if (w && !w.isDestroyed()) w.setBackgroundColor('#00000000');
   }
   if (typeof patch.fontSize === 'number') n.fontSize = Math.min(32, Math.max(10, patch.fontSize));
   scheduleSave();
